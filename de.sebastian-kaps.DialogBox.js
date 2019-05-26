@@ -4,13 +4,46 @@
 @version 0.0
 */
 
+/**
+ * TODO:
+ * - check width and height constraints to make sure text and buttons
+ *   fit into specified dimensions
+ * - maybe autoscale font size / wrap text automatically
+ * - find a way to specify defaults like colours, fonts, -sizes etc. from
+ *   the UI ProntoScript code (some kind of properties object maybe?)
+ * - remove(): is it possible to get all the dynamically created widgets
+ *   without having to track them explicitely or removing other UI elements
+ */
 
-/* some customizations */
 
-
-/* end of customizations */
-
-
+ /**
+  * USAGE:
+  * - in PEP2/PEP3 create a hidden page for the UI elements, e.g. HOME->GUI;
+  *   (that "path" is currently configured in the "var gfx = ...." line)
+  * - add 4 images (e.g. 10x10 pixels size) for the dialog box frame corners
+  *   - tag them TL, TR, BL, BR
+  *     (T is for "top", B for "bottom", L/R for left and right)
+  * - add 4 images for the frame edges, tag them TOP, LEFT, RIGHT, BOTTOM
+  * - add one image for the dialog box background; tag it FILL
+  * - add a button like the ones you want on the dialog box, tag it BUTTON
+  *
+  * The dialog box buttons are specified as an array of tupels with the first
+  * element in each tupel being the button label and the second element being
+  * the code that's to be executed when the button is pressed. E.g.:
+  *
+  *   var myButtons = [
+  *                   ["Show Alert", "GUI.alert('Hello World!');"],
+  *                   ["Cancel", "close();"]
+  *                 ];
+  *
+  * To open the dialog box call it like this:
+  *
+  *   dbox(width, height, title, message, buttons[]);
+  *
+  * e.g. (using the buttons array from above):
+  *
+  *   dbox(400, 200, "Example Dialog", "Some Message", myButtons);
+  */
 
 var frame = [];
 var btns = [];
@@ -25,9 +58,6 @@ args:
     buttons[] - array of (button_text, action) tupels
 */
 function dbox(w, h, title, message, buttons) {
-    // TODO: check if width and height are above minimum requirements
-    // {...}
-
     var gfx = CF.page("GUI", "HOME");
 
     // quick & dirty: destroy existing dialog when attempting to open a second one
