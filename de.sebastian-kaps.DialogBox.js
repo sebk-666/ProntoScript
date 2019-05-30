@@ -3,24 +3,11 @@
 @title de.sebastian-kaps.DialogBox
 @version 0.0
 */
-
-/**
- * TODO:
- * - check width and height constraints to make sure text and buttons
- *   fit into specified dimensions
- * - maybe autoscale font size / wrap text automatically
- * - find a way to specify defaults like colours, fonts, -sizes etc. from
- *   the UI ProntoScript code (some kind of properties object maybe?)
- * - remove(): is it possible to get all the dynamically created widgets
- *   without having to track them explicitely or removing other UI elements
- */
-
-
  /**
   * USAGE:
   * - in PEP2/PEP3 create a hidden page for the UI elements, e.g. HOME->GUI;
-  *   (that "path" is currently configured in the "var gfx = ...." line)
-  * - add 4 images (e.g. 10x10 pixels size) for the dialog box frame corners
+  *   (that "path" is currently configured via the "var gfx = ...." line below)
+  * - add 4 images (e.g. 10x10 pixels in size) for the dialog box frame corners
   *   - tag them TL, TR, BL, BR
   *     (T is for "top", B for "bottom", L/R for left and right)
   * - add 4 images for the frame edges, tag them TOP, LEFT, RIGHT, BOTTOM
@@ -43,7 +30,22 @@
   * e.g. (using the buttons array from above):
   *
   *   dbox(400, 200, "Example Dialog", "Some Message", myButtons);
+  *
+  * To close the dialog box, use close()
   */
+
+  /**
+ * TODO:
+ * - check width and height constraints to make sure text and buttons
+ *   fit into specified dimensions
+ * - maybe autoscale font size / wrap text automatically
+ * - find a way to specify defaults like colours, fonts, -sizes etc. from
+ *   the UI ProntoScript code (some kind of properties object maybe?)
+ * - have some control over text allignment from the UI code
+ * - remove(): is it possible to get all the dynamically created widgets
+ *   without having to track them explicitely or removing other UI elements
+ */
+
 
 var frame = [];
 var btns = [];
@@ -88,6 +90,15 @@ function dbox(w, h, title, message, buttons) {
         frame[i].width  = gfx.widget(corners[i]).getImage().width;
         frame[i].height = gfx.widget(corners[i]).getImage().height;
     });
+
+    // some defaults
+    var defProperties = {
+        visible:false,
+        font:"verdana.ttf",
+        halign:"center",
+        valigh:"center"
+    }
+
     // set up the edges
     // top
     frame[1].width = w - (2 * frame[0].width);
@@ -162,7 +173,8 @@ function dbox(w, h, title, message, buttons) {
     msgpanel = GUI.addPanel();
     msgpanel.visible = false;
     msgpanel.width = frame[1].width;
-    msgpanel.height = frame[3].height - tpanel.height - gfx.widget("BUTTON").getImage().height;
+    msgpanel.height = frame[3].height - tpanel.height
+                        - gfx.widget("BUTTON").getImage().height;
     msgpanel.left = frame[1].left;
     msgpanel.top = tpanel.top + tpanel.height;
     msgpanel.setImage(gfx.widget("FILL").getImage());
@@ -190,7 +202,7 @@ function dbox(w, h, title, message, buttons) {
         btns[b].visible = false;
         btns[b].setImage(gfx.widget("BUTTON").getImage(0), 0);
         btns[b].setImage(gfx.widget("BUTTON").getImage(1), 1);
-        btns[b].color = 0xF0F0F0;
+        btns[b].setColor(0xF0F0F0);
         btns[b].font = "verdana.ttf";
         btns[b].fontSize = 10;
         btns[b].width = gfx.widget("BUTTON").getImage().width;
@@ -199,30 +211,44 @@ function dbox(w, h, title, message, buttons) {
         // button placement
         switch(buttons.length) {
         case 1:
-            btns[b].left = msgpanel.left + Math.floor(msgpanel.width / 2) - Math.ceil(btns[b].width / 2);
+            btns[b].left = msgpanel.left
+                            + Math.floor(msgpanel.width / 2)
+                            - Math.ceil(btns[b].width / 2);
             break;
         case 2:
-            btns[b].left = msgpanel.left + ((2 * b + 1) * Math.floor(msgpanel.width / 4)) - Math.ceil(btns[b].width / 2);
+            btns[b].left = msgpanel.left
+                            + ((2 * b + 1) * Math.floor(msgpanel.width / 4))
+                            - Math.ceil(btns[b].width / 2);
             break;
         case 3:
-            btns[b].left = msgpanel.left + ((2 * b + 1) * Math.floor(msgpanel.width / 6)) - Math.ceil(btns[b].width / 2);
+            btns[b].left = msgpanel.left
+                            + ((2 * b + 1) * Math.floor(msgpanel.width / 6))
+                            - Math.ceil(btns[b].width / 2);
             break;
         case 4:
-            btns[b].left = msgpanel.left + ((2 * b + 1) * Math.floor(msgpanel.width / 8)) - Math.ceil(btns[b].width / 2);
+            btns[b].left = msgpanel.left
+                            + ((2 * b + 1) * Math.floor(msgpanel.width / 8))
+                            - Math.ceil(btns[b].width / 2);
             break;
         default:
-            // default: constant spacing between buttons; and buttons centered as a group
+            // default: constant spacing and buttons centered as a group
             var spacing = 2;  // pixels of space to add between buttons
-            bwidth_total = (buttons.length - 1) * (btns[b].width + spacing) + btns[b].width;
+            bwidth_total = (buttons.length - 1) * (btns[b].width + spacing)
+                            + btns[b].width;
+
             left_margin = Math.floor((msgpanel.width - bwidth_total)/2);
-            btns[b].left = msgpanel.left + left_margin + (b*(btns[b].width + spacing));
+
+            btns[b].left = msgpanel.left + left_margin
+                            + (b*(btns[b].width + spacing));
         }
 
         btns[b].top = (bpanel.top + bpanel.height) - (btns[b].height);
         btns[b].label = buttons[b][0];
         // it's just a JS object, so we can add our own properties to it
         btns[b].action = buttons[b][1];
-        btns[b].onPress = function() { eval(this.action); };
+        btns[b].onPress = function() {this.transparent=true;
+                                        eval(this.action);
+                                        this.transparent=false;};
         btns[b].visible = true;
     }
 
@@ -240,4 +266,11 @@ function close() {
     tpanel.remove();
     msgpanel.remove();
     bpanel.remove();
+}
+
+// set widget attributes from a specified properties object
+function setProperties(w, pObj) {
+    for (var attr in pObj) {
+        w[attr] = pObj[attr];
+    }
 }
