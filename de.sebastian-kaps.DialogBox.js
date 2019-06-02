@@ -37,16 +37,6 @@
   * To close the dialog box, use close()
   */
 
-  /**
- * TODO:
- * - check width and height constraints to make sure text and buttons
- *   fit into specified dimensions
- * - maybe autoscale font size / wrap text automatically
- * - remove(): is it possible to get all the dynamically created widgets
- *   without having to track them explicitely or removing other UI elements
- */
-
-
 var frame = [];
 var btns = [];
 var tPanel,msgPanel,bPanel;
@@ -67,6 +57,18 @@ function dbox(w, h, title, message, buttons) {
         close();
     };
 
+    var tTemplate = gfx.widget("TITLE");
+    var msgTemplate = gfx.widget("MESSAGE");
+    var bTemplate = gfx.widget("BUTTON");
+
+    // pixels of space to keep between buttons when clustering
+    var spacing = 2;
+
+    // check required window width and adjust if necessary
+    var widthMin = (buttons.length)  * (bTemplate.width + spacing) + spacing
+                    + (2 * gfx.widget("LEFT").width);
+    if (w < widthMin) w = widthMin;
+
     // set up the frame
     /*
         index 0 to 7: tr, top, tl, left, right, bl, bottom, br
@@ -77,7 +79,6 @@ function dbox(w, h, title, message, buttons) {
     */
     for (var i = 0; i <= 7; i++) {
         frame[i] = GUI.addPanel();
-        frame[i].visible = false;
         frame[i].stretchImage = true;
     }
 
@@ -145,14 +146,8 @@ function dbox(w, h, title, message, buttons) {
     frame[7].setImage(gfx.widget("BR").getImage());
 
     /* window contents */
-    var tTemplate = gfx.widget("TITLE");
-    var msgTemplate = gfx.widget("MESSAGE");
-    var bTemplate = gfx.widget("BUTTON");
-
-
     // title
     tPanel = GUI.addPanel();
-    tPanel.visible = false;
     tPanel.width = frame[1].width;
     tPanel.height = 25;
     tPanel.top = frame[3].top;
@@ -169,10 +164,8 @@ function dbox(w, h, title, message, buttons) {
     tPanel.stretchImage = true;
     tPanel.label = title;
 
-
-    // message
+    // message panel
     msgPanel = GUI.addPanel();
-    msgPanel.visible = false;
     msgPanel.width = frame[1].width;
     msgPanel.height = frame[3].height - tPanel.height
                         - bTemplate.getImage().height;
@@ -180,7 +173,6 @@ function dbox(w, h, title, message, buttons) {
     msgPanel.top = tPanel.top + tPanel.height;
     msgPanel.setImage(msgTemplate.getImage());
     msgPanel.stretchImage = true;
-    msgPanel.label = message;
 
     // copy some attributes from the GUI resources
     var msgTemplateProperties = ['fontSize', 'color', 'font', 'valign',
@@ -189,9 +181,30 @@ function dbox(w, h, title, message, buttons) {
         msgPanel[key] = msgTemplate[key];
     });
 
+    // wrap text if message is too long for a single line...
+    var labelWidth = msgPanel.getLabelSize(message)[0];
+    if (labelWidth > msgPanel.width) {
+        var lines = Math.ceil(labelWidth / msgPanel.width);
+        var lineLength = Math.floor(message.length / lines);
+        message = message.wordWrap(lineLength, '\n');
+    }
+    // ...and adjust panel height accordingly
+    var labelHeight = msgPanel.getLabelSize(message)[1] + 5;
+    var growBy;
+    if (labelHeight > msgPanel.height) {
+        growBy = labelHeight - msgPanel.height;
+        msgPanel.height = labelHeight;
+        // adjust other frame elements
+        frame[3].height += growBy;
+        frame[4].height += growBy;
+        frame[5].top += growBy;
+        frame[6].top += growBy;
+        frame[7].top += growBy;
+    }
+    msgPanel.label = message;
+
     // button space
     bPanel = GUI.addPanel();
-    bPanel.visible = false;
     bPanel.width = frame[1].width;
     bPanel.height = frame[3].height - tPanel.height - msgPanel.height;
     bPanel.left = frame[1].left;
@@ -202,7 +215,6 @@ function dbox(w, h, title, message, buttons) {
 // now add the buttons
     for (var b = 0; b < buttons.length; b++) {
         btns[b] = GUI.addButton();
-        btns[b].visible = false;
         // copy some properties from the GUI resources again
         var bTemplateProperties = ['fontSize', 'font', 'valign', 'halign',
                                     'bold','italic'];
@@ -240,7 +252,6 @@ function dbox(w, h, title, message, buttons) {
             break;
         default:
             // default: constant spacing and buttons centered as a group
-            var spacing = 2;  // pixels of space to add between buttons
             bwidth_total = (buttons.length - 1) * (btns[b].width + spacing)
                             + btns[b].width;
 
@@ -275,3 +286,30 @@ function close() {
     msgPanel.remove();
     bPanel.remove();
 }
+
+// clean up when leaving the page
+CF.activity().onExit = function() { close(); }
+
+//********************************************************************************
+// JavaScript String Extensions
+//********************************************************************************
+// String extensions for wordwrap
+// String.wordWrap(maxLength: Integer, [breakWith: String = "\n"], [cutWords: Boolean = false]): String
+// Returns a string with the extra characters/words "broken".
+// maxLength: maximum amount of characters per line
+// breakWith: string that will be added whenever it's needed to break the line
+// cutWords:  if true, the words will be cut, so the line will have exactly "maxLength" characters, otherwise the words won't be cut
+if (!String.prototype.wordWrap) {
+    String.prototype.wordWrap = function wordWrap(m, b, c) {
+        var i, j, s, r = this.split("\n");
+        if (m > 0) {
+            for (i in r) {
+                for (s = r[i], r[i] = ""; s.length > m; j = c ? m : (j = s.substr(0, m).match(/\S*$/)).input.length - j[0].length || m, r[i] += s.substr(0, j) + ((s = s.substr(j)).length ? b : "")) { };
+                r[i] += s;
+            }
+        }
+        return r.join("\n");
+    };
+}
+
+
