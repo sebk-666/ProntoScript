@@ -261,9 +261,6 @@ function close() {
     };
 }
 
-// clean up when leaving the page
-//CF.activity().onExit = function() { close(); }
-
 //********************************************************************************
 // JavaScript String Extensions
 //********************************************************************************
