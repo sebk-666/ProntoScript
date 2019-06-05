@@ -243,7 +243,13 @@ function dbox(w, h, title, message, buttons) {
     panels['title'].visible = true;
     panels['bottom'].visible = true;
 
-    CF.page().onExit = function() { close(); }
+    // clean up when switching pages within the activity
+    CF.page()['__dbox'] = this;
+    CF.page().onExit = function() {
+        CF.page()['__dbox'].close();
+        delete this['__dbox'];
+        this.onExit = null;
+    };
 };
 
 // remove all the widgets
