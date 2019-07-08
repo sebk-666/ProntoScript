@@ -5,9 +5,19 @@
 */
 
 // access parameters
-ha_host = CF.widget("HA_HOST_IP", "PARAMETERS", "HA_MOD").label;
-ha_port = CF.widget("HA_PORT", "PARAMETERS", "HA_MOD").label;
-ha_token = CF.widget("HA_TOKEN", "PARAMETERS", "HA_MOD").label;
+var ha_host = CF.widget("HA_HOST_IP", "PARAMETERS", "HA_MOD").label;
+var ha_port = CF.widget("HA_PORT", "PARAMETERS", "HA_MOD").label;
+var ha_token = CF.widget("HA_TOKEN", "PARAMETERS", "HA_MOD").label;
+
+var sysModel = System.getModel();
+var sysSerial = System.getSerial();
+
+var entityString = sysModel + "_" + String(sysSerial);
+if (entityString === "-_-") {
+    entityString = "TSUSIM_0000000000";
+    sysModel = "TSUSIM";
+    sysSerial = "0000000000";
+}
 
 var updateInterval = 1800 * 1000; // 30min; in msec
 
@@ -26,7 +36,7 @@ function haSetStateAttribute(entityId, state, attribute, value, reqId) {
     request[reqId].open("POST", "http://" + ha_host + ":" + ha_port + "/api/states/" + entityId, true);
     request[reqId].setRequestHeader("Authorization:", "Bearer " + ha_token);
     request[reqId].setRequestHeader("Content-Type:", "application/json");
-    request[reqId].send('{"state": "' + state + '", "attributes": {"' + attribute + '": ' + '"' + value + '", "last_update": "'  + getDate() + '", "icon": "mdi:tablet", "friendly_name": "Pronto TSU9800"}}');
+    request[reqId].send('{"state": "' + state + '", "attributes": {"' + attribute + '": ' + '"' + value + '", "last_update": "'  + getDate() + '", "icon": "mdi:tablet", "friendly_name": "Pronto ' + sysModel + '", "serial": "' +  String(sysSerial) + '"}}');
  //   System.print(getDate() + " updated BatState: " + value);
 }
 
@@ -61,7 +71,8 @@ function updateHA() {
             batLvl = "unknown";
             break;
     }
-    haSetStateAttribute("device_tracker.pronto", "home", "battery", batLvl, Math.floor(Math.random()*100000));
+
+    haSetStateAttribute("device_tracker." + entityString, "home", "battery", batLvl, Math.floor(Math.random()*100000));
 }
 
 /*
