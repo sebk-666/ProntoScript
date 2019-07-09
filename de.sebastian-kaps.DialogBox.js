@@ -114,7 +114,7 @@ function dbox(w, h, title, message, buttons) {
     /* window contents */
     // title
     panels['title'] = GUI.addPanel();
-    tPanel = panels['title'];
+    var tPanel = panels['title'];
     tPanel.width = frame[1].width;
     tPanel.height = 25;
     tPanel.top = frame[3].top;
@@ -133,7 +133,7 @@ function dbox(w, h, title, message, buttons) {
 
     // message panel
     panels['message'] = GUI.addPanel();
-    mPanel = panels['message'];
+    var mPanel = panels['message'];
     mPanel.width = frame[1].width;
     mPanel.height = frame[3].height - tPanel.height
                         - bTemplate.getImage().height;
@@ -173,7 +173,7 @@ function dbox(w, h, title, message, buttons) {
 
     // button space
     panels['bottom'] = GUI.addPanel();
-    bPanel = panels['bottom'];
+    var bPanel = panels['bottom'];
     bPanel.width = frame[1].width;
     bPanel.height = frame[3].height - tPanel.height - mPanel.height;
     bPanel.left = frame[1].left;
