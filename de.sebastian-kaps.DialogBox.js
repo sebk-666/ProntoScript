@@ -6,7 +6,7 @@
 
 var frame = [];
 var btns = [];
-var panels = [];
+var panels = {};
 /*
 args:
     w - width
@@ -114,52 +114,54 @@ function dbox(w, h, title, message, buttons) {
     /* window contents */
     // title
     panels['title'] = GUI.addPanel();
-    panels['title'].width = frame[1].width;
-    panels['title'].height = 25;
-    panels['title'].top = frame[3].top;
-    panels['title'].left = frame[1].left;
+    tPanel = panels['title'];
+    tPanel.width = frame[1].width;
+    tPanel.height = 25;
+    tPanel.top = frame[3].top;
+    tPanel.left = frame[1].left;
 
     // copy some attributes from the GUI resources
     var tTemplateProperties = ['fontSize', 'color', 'font', 'valign',
                                 'halign', 'bold','italic'];
     tTemplateProperties.forEach(function(key) {
-        panels['title'][key] = tTemplate[key];
+        tPanel[key] = tTemplate[key];
     });
 
-    panels['title'].setImage(tTemplate.getImage());
-    panels['title'].stretchImage = true;
-    panels['title'].label = title;
+    tPanel.setImage(tTemplate.getImage());
+    tPanel.stretchImage = true;
+    tPanel.label = title;
 
     // message panel
     panels['message'] = GUI.addPanel();
-    panels['message'].width = frame[1].width;
-    panels['message'].height = frame[3].height - panels['title'].height
+    mPanel = panels['message'];
+    mPanel.width = frame[1].width;
+    mPanel.height = frame[3].height - tPanel.height
                         - bTemplate.getImage().height;
-    panels['message'].left = frame[1].left;
-    panels['message'].top = panels['title'].top + panels['title'].height;
-    panels['message'].setImage(msgTemplate.getImage());
-    panels['message'].stretchImage = true;
+    mPanel.left = frame[1].left;
+    mPanel.top = tPanel.top + tPanel.height;
+    mPanel.setImage(msgTemplate.getImage());
+    mPanel.stretchImage = true;
 
     // copy some attributes from the GUI resources
     var msgTemplateProperties = ['fontSize', 'color', 'font', 'valign',
                                     'halign', 'bold','italic'];
     msgTemplateProperties.forEach(function(key) {
-        panels['message'][key] = msgTemplate[key];
+        mPanel[key] = msgTemplate[key];
     });
 
     // wrap text if message is too long for a single line...
-    var labelWidth = panels['message'].getLabelSize(message)[0];
-    if (labelWidth > panels['message'].width) {
-        var lines = Math.ceil(labelWidth / panels['message'].width);
+    var labelWidth = mPanel.getLabelSize(message)[0];
+    if (labelWidth > mPanel.width) {
+        var lines = Math.ceil(labelWidth / mPanel.width);
         var lineLength = Math.floor(message.length / lines);
         message = message.wordWrap(lineLength, '\n');
     }
     // ...and adjust panel height accordingly
-    var labelHeight = panels['message'].getLabelSize(message)[1] + 5;
+    var labelHeight = mPanel.getLabelSize(message)[1] + 5;
     var growBy;
-    if (labelHeight > panels['message'].height) {
-        growBy = labelHeight - panels['message'].height;
-        panels['message'].height = labelHeight;
+    if (labelHeight > mPanel.height) {
+        growBy = labelHeight - mPanel.height;
+        mPanel.height = labelHeight;
         // adjust other frame elements
         frame[3].height += growBy;
         frame[4].height += growBy;
@@ -167,16 +169,17 @@ function dbox(w, h, title, message, buttons) {
         frame[6].top += growBy;
         frame[7].top += growBy;
     }
-    panels['message'].label = message;
+    mPanel.label = message;
 
     // button space
     panels['bottom'] = GUI.addPanel();
-    panels['bottom'].width = frame[1].width;
-    panels['bottom'].height = frame[3].height - panels['title'].height - panels['message'].height;
-    panels['bottom'].left = frame[1].left;
-    panels['bottom'].top = panels['message'].top + panels['message'].height;
-    panels['bottom'].setImage(msgTemplate.getImage());
-    panels['bottom'].stretchImage = true;
+    bPanel = panels['bottom'];
+    bPanel.width = frame[1].width;
+    bPanel.height = frame[3].height - tPanel.height - mPanel.height;
+    bPanel.left = frame[1].left;
+    bPanel.top = mPanel.top + mPanel.height;
+    bPanel.setImage(msgTemplate.getImage());
+    bPanel.stretchImage = true;
 
 // now add the buttons
     for (var b = 0; b < buttons.length; b++) {
@@ -197,23 +200,23 @@ function dbox(w, h, title, message, buttons) {
         // button placement
         switch(buttons.length) {
         case 1:
-            btns[b].left = panels['message'].left
-                            + Math.floor(panels['message'].width / 2)
+            btns[b].left = mPanel.left
+                            + Math.floor(mPanel.width / 2)
                             - Math.ceil(btns[b].width / 2);
             break;
         case 2:
-            btns[b].left = panels['message'].left
-                            + ((2 * b + 1) * Math.floor(panels['message'].width / 4))
+            btns[b].left = mPanel.left
+                            + ((2 * b + 1) * Math.floor(mPanel.width / 4))
                             - Math.ceil(btns[b].width / 2);
             break;
         case 3:
-            btns[b].left = panels['message'].left
-                            + ((2 * b + 1) * Math.floor(panels['message'].width / 6))
+            btns[b].left = mPanel.left
+                            + ((2 * b + 1) * Math.floor(mPanel.width / 6))
                             - Math.ceil(btns[b].width / 2);
             break;
         case 4:
-            btns[b].left = panels['message'].left
-                            + ((2 * b + 1) * Math.floor(panels['message'].width / 8))
+            btns[b].left = mPanel.left
+                            + ((2 * b + 1) * Math.floor(mPanel.width / 8))
                             - Math.ceil(btns[b].width / 2);
             break;
         default:
@@ -221,13 +224,13 @@ function dbox(w, h, title, message, buttons) {
             bwidth_total = (buttons.length - 1) * (btns[b].width + spacing)
                             + btns[b].width;
 
-            left_margin = Math.floor((panels['message'].width - bwidth_total)/2);
+            left_margin = Math.floor((mPanel.width - bwidth_total)/2);
 
-            btns[b].left = panels['message'].left + left_margin
+            btns[b].left = mPanel.left + left_margin
                             + (b*(btns[b].width + spacing));
         }
 
-        btns[b].top = (panels['bottom'].top + panels['bottom'].height) - (btns[b].height);
+        btns[b].top = (bPanel.top + bPanel.height) - (btns[b].height);
         btns[b].label = buttons[b][0];
         // it's just a JS object, so we can add our own properties to it
         btns[b].action = buttons[b][1];
@@ -239,9 +242,9 @@ function dbox(w, h, title, message, buttons) {
 
     // make everything visible
     frame.forEach(function(w){w.visible=true});
-    panels['message'].visible = true;
-    panels['title'].visible = true;
-    panels['bottom'].visible = true;
+    mPanel.visible = true;
+    tPanel.visible = true;
+    bPanel.visible = true;
 
     // clean up when switching pages within the activity
     CF.page()['__dbox'] = this;
