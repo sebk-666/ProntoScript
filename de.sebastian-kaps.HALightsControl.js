@@ -11,9 +11,15 @@
 */
 
 // access parameters
-ha_host = CF.widget("HA_HOST_IP", "PARAMETERS", "HA_MOD").label;
-ha_port = CF.widget("HA_PORT", "PARAMETERS", "HA_MOD").label;
-ha_token = CF.widget("HA_TOKEN", "PARAMETERS", "HA_MOD").label;
+var ha_host = CF.widget("HA_HOST_IP", "PARAMETERS", "HA_MOD").label;
+var ha_port = CF.widget("HA_PORT", "PARAMETERS", "HA_MOD").label;
+var ha_token = CF.widget("HA_TOKEN", "PARAMETERS", "HA_MOD").label;
+
+// preload images
+const IMG_ON = CF.widget("IMG_ON", "RESOURCES").getImage();
+const IMG_OFF = CF.widget("IMG_OFF", "RESOURCES").getImage();
+
+var pageChanged = 0;
 
 /* call a specific doman/service through HA API for a given entity, e.g. "light", "turn_on", "Deckenlampe" */
 function haService (domain, service, entityId) {
@@ -59,7 +65,7 @@ function haLightChangeBrightness(entityId, delta_pct) {
     }
 }
 
-var request = new Array();
+var request = [];
 function getState(entityId) {
     //System.setDebugMask(9);
     request[entityId] = new com.philips.HttpLibrary.HttpRequest();
@@ -72,11 +78,12 @@ function getState(entityId) {
         if (request[entityId].readyState == 4) {
             regex = /"state": "(\w+)"/;
             state = (request[entityId].responseText).match(regex)[1];
+            System.print(entityId);
             if (state == "on") {
-                CF.widget(entityId).setImage(CF.widget("IMG_ON", "RESOURCES").getImage());
+                CF.widget(entityId).setImage(IMG_ON);
                 CF.widget(entityId).label = "on";
             } else {
-                CF.widget(entityId).setImage(CF.widget("IMG_OFF", "RESOURCES").getImage());
+                CF.widget(entityId).setImage(IMG_OFF);
                 CF.widget(entityId).label = "off";
             }
         }
@@ -156,9 +163,11 @@ function lightLabelHelper(label) {
     Changes the button image according to the light's state.
     If light was the 'activelight', clears that association when turning off.
 */
+
+var lightStateChanged = {};
 function lightButtonHelper(light) {
     if (light.label == "off") {
-        light.setImage(CF.widget("IMG_ON", "RESOURCES").getImage());
+        light.setImage(IMG_ON);
         light.label = "on";
 
         if (activelight) {
@@ -167,7 +176,7 @@ function lightButtonHelper(light) {
         activelight = light.tag;
         CF.widget(activelight + "_label").setColor(0x0000FF, 0);
     } else {
-        light.setImage(CF.widget("IMG_OFF", "RESOURCES").getImage());
+        light.setImage(IMG_OFF);
         light.label = "off";
         if (activelight == light.tag) {
             activelight = null;
@@ -175,6 +184,7 @@ function lightButtonHelper(light) {
         }
     }
     haService("light", "toggle", light.tag);
+    lightStateChanged[light.tag] = true;
 }
 
 /*
@@ -193,7 +203,29 @@ function setupRotary() {
 */
 function update(lights) {
     for (i in lights) {
+        if (lightStateChanged['light.' + lights[i]]) {
+            lightStateChanged['light.' + lights[i]] = false;
+            continue;
+        }
         getState('light.' + lights[i]);
     }
-    CF.activity().scheduleAfter(10000, update);
+    CF.activity().scheduleAfter(5000, updateLoop, lights);
 }
+
+// we need to separate the "loop" function as update() is called
+// by the page script and is most likely executed before the scheduled one
+function updateLoop(lights) {
+    if (pageChanged) {
+        CF.page().onExit = function(){pageChanged++; };
+        pageChanged--;
+        return;
+    };
+    update(lights);
+}
+
+// we need to have an exit condition for the scheduleAfter() function;
+// beware of onEntry as that's run after the page script;
+// this needs to be a counter to avoid setting multiple timers with double-taps
+(function(){
+    CF.page().onExit = function(){pageChanged++; };
+}());
