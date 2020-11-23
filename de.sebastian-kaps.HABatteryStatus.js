@@ -1,7 +1,7 @@
 /*!
 @author Sebastian Kaps
 @title de.sebastian-kaps.HABatteryStatus
-@version 0.0
+@version 0.1
 */
 
 // access parameters
@@ -23,7 +23,7 @@ var updateInterval = 1800 * 1000; // 30min; in msec
 
 function getDate() {
     d = new Date();
-    return d.getFullYear() + "-" + ("0" + Number(d.getMonth()+1)).slice(-2,2) + "-" + d.getDate() + "T" + GUI.getDisplayTime() + ":" + ("0" + d.getSeconds()).slice(-2);
+    return d.getFullYear() + "-" + ("0" + Number(d.getMonth()+1)).slice(-2) + "-" + d.getDate() + "T" + GUI.getDisplayTime() + ":" + ("0" + d.getSeconds()).slice(-2);
 }
 
 var request = new Array();
@@ -34,8 +34,8 @@ function haSetStateAttribute(entityId, state, attribute, value, reqId) {
 
     request[reqId] = new com.philips.HttpLibrary.HttpRequest();
     request[reqId].open("POST", "http://" + ha_host + ":" + ha_port + "/api/states/" + entityId, true);
-    request[reqId].setRequestHeader("Authorization:", "Bearer " + ha_token);
-    request[reqId].setRequestHeader("Content-Type:", "application/json");
+    request[reqId].setRequestHeader("Authorization", "Bearer " + ha_token);
+    request[reqId].setRequestHeader("Content-Type", "application/json");
     request[reqId].send('{"state": "' + state + '", "attributes": {"' + attribute + '": ' + '"' + value + '", "last_update": "'  + getDate() + '", "icon": "mdi:tablet", "friendly_name": "Pronto ' + sysModel + '", "serial": "' +  String(sysSerial) + '"}}');
  //   System.print(getDate() + " updated BatState: " + value);
 }
@@ -83,7 +83,7 @@ function periodicUpdate(activity) {
 //    System.setDebugMask(9);
 //    System.print(getDate() + " [ScheduleAfter]");
     updateHA();
-    activity.scheduleAfter(updateInterval, periodicUpdate, activity);
+    activity.scheduleAfter(updateInterval, arguments.callee, activity);
 }
 
 ((function () {
