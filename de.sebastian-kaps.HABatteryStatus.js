@@ -26,15 +26,14 @@ function getDate() {
     return d.getFullYear() + "-" + ("0" + Number(d.getMonth()+1)).slice(-2) + "-" + d.getDate() + "T" + GUI.getDisplayTime() + ":" + ("0" + d.getSeconds()).slice(-2);
 }
 
-var request = {};
-function haSetStateAttribute(entityId, state, attribute, value, reqId) {
-    request.reqId = new com.philips.HttpLibrary.HttpRequest();
-    request.reqId.open("POST", "http://" + ha_host + ":" + ha_port + "/api/states/" + entityId, true);
-    request.reqId.setRequestHeader("Authorization", "Bearer " + ha_token);
-    request.reqId.setRequestHeader("Content-Type", "application/json");
-    request.reqId.setRequestHeader("Connection", "Close");
-    request.reqId.send('{"state": "' + state + '", "attributes": {"' + attribute + '": ' + '"' + value + '", "last_update": "'  + getDate() + '", "icon": "mdi:tablet", "friendly_name": "Pronto ' + sysModel + '", "serial": "' +  String(sysSerial) + '"}}');
-    request.reqId = null;
+function haSetStateAttribute(entityId, state, attribute, value) {
+    var request;
+    request = new com.philips.HttpLibrary.HttpRequest();
+    request.open("POST", "http://" + ha_host + ":" + ha_port + "/api/states/" + entityId, true);
+    request.setRequestHeader("Authorization", "Bearer " + ha_token);
+    request.setRequestHeader("Content-Type", "application/json");
+    request.setRequestHeader("Connection", "Close");
+    request.send('{"state": "' + state + '", "attributes": {"' + attribute + '": ' + '"' + value + '", "last_update": "'  + getDate() + '", "icon": "mdi:tablet", "friendly_name": "Pronto ' + sysModel + '", "serial": "' +  String(sysSerial) + '"}}');
 }
 
 function updateHA() {
@@ -69,7 +68,7 @@ function updateHA() {
             break;
     }
 
-    haSetStateAttribute("device_tracker." + entityString, "home", "battery", batLvl, Math.floor(Math.random()*100000));
+    haSetStateAttribute("device_tracker." + entityString, "home", "battery", batLvl);
 }
 
 /*
