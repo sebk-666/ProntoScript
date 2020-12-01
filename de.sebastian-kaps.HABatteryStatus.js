@@ -23,7 +23,10 @@ var updateInterval = 1800 * 1000; // 30min; in msec
 
 function getDate() {
     d = new Date();
-    return d.getFullYear() + "-" + ("0" + Number(d.getMonth()+1)).slice(-2) + "-" + d.getDate() + "T" + GUI.getDisplayTime() + ":" + ("0" + d.getSeconds()).slice(-2);
+    return d.getFullYear() 
+	+ "-" + ("0" + Number(d.getMonth()+1)).slice(-2) 
+	+ "-" + ("0" + d.getDate()).slice(-2) 
+	+ "T" + GUI.getDisplayTime() + ":" + ("0" + d.getSeconds()).slice(-2);
 }
 
 function haSetStateAttribute(entityId, state, attribute, value) {
